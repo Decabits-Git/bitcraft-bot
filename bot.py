@@ -34,7 +34,7 @@ async def poll_data():
                             try:
                                 building_name = craft["buildingName"]
                                 skill_name = skill[int(craft["levelRequirements"][0]["skill_id"])]
-                                level_value = {craft["levelRequirements"][0]["level"]}
+                                level_value = craft["levelRequirements"][0]["level"]
                                 effort_value = craft["totalActionsRequired"]
                                 owner_name = craft["ownerUsername"]
                                 if craft["toolRequirements"]:
