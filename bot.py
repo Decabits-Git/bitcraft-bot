@@ -1,6 +1,7 @@
 import discord
 import requests
 import asyncio
+import src.utils.embeds.embed_builder as embed
 
 TOKEN = ""
 CHANNEL_ID =  
@@ -31,20 +32,31 @@ async def poll_data():
                     if craft["entityId"] not in seen_ids:
                         if int(craft["totalActionsRequired"]) > 20000:
                             try:
-                                msg = f"""# :loudspeaker: NEW BIGGER CRAFT :loudspeaker:
-**Building:** {craft["buildingName"]}
-**Skill:** {skill[int(craft["levelRequirements"][0]["skill_id"])]}
-**Level:** {craft["levelRequirements"][0]["level"]}
-"""
-
+                                building_name = craft["buildingName"]
+                                skill_name = skill[int(craft["levelRequirements"][0]["skill_id"])]
+                                level_value = craft["levelRequirements"][0]["level"]
+                                effort_value = craft["totalActionsRequired"]
+                                owner_name = craft["ownerUsername"]
                                 if craft["toolRequirements"]:
-                                    msg += f"**Tool:** {tool_icons[int(craft["toolRequirements"][0]["tool_type"])]}\n"
-
-                                msg += f"""**Effort:** {craft["totalActionsRequired"]}
-**Owned by:** {craft["ownerUsername"]}
-"""
-
-                                await channel.send(msg)
+                                    tool_icon = tool_icons[int(craft["toolRequirements"][0]["tool_type"])]
+                                    craft_embed = embed.new_craft_embed(
+                                        Building=building_name,
+                                        Skill=skill_name,
+                                        Level=level_value,
+                                        Effort=effort_value,
+                                        Tool=tool_icon,
+                                        Owner=owner_name
+                                    )
+                                else:
+                                    craft_embed = embed.new_craft_embed(
+                                        Building=building_name,
+                                        Skill=skill_name,
+                                        Level=level_value,
+                                        Effort=effort_value,
+                                        Owner=owner_name
+                                    )
+                                
+                                await channel.send(embed=craft_embed)
 
                                 seen_ids.add(craft["entityId"])
 
