@@ -4,14 +4,17 @@ Bot for getting craft informations through the Bitjita API for the game "BitCraf
 ### Set up Discord
 Go to the Discord Developer Portal
 https://discord.com/developers/home
-Select you want to create your own bot if asked and start creating an "application"
+0. Select "you want to create your own bot" if asked and start creating an "application"
 1. Name it as you like - doesnt really matter
 2. Left side switch to installation
   - uncheck user install
-  - at the bottom in "Guild Install" add "bot" to the scope and "Send Messages" to the permissions
+  - at the bottom in "Guild Install" add "bot" to the scope and add following permissions:
+    - "Manage Messages", "Manage Threads", "Read Message History", "Send Messages", "Send Messages in Threads"
+  - dont forget to "Save Changes"
 3. Left side switch to Bot
   - give your bot a username and a profile picture and banner as you like
   - "Reset Token" to get a valid TOKEN, copy this and save it for now
+  - activate "Message Content Intent"
 4. (optional) You can add your own Emojis on the "Emojis" tab if needed
 ### Set up the script
 1. Install requirements
@@ -34,7 +37,13 @@ Note: CHANNEL_ID and SLEEPTIME are ints (numbers). Token is a string.
 python bot.py
 
 ## TODO
-- use forums instead of channels
-- detect already posted crafts
 - create a leaderboard for finished crafts (see https://bitjita.com/docs/api/crafts/[craftId]/contributions)
-  - delete finished crafts from their respective channel
+  - delete finished crafts from their respective channel and post the leaderboard results somewhere else
+ 
+### DONE
+- use forums instead of channels - Decabits
+- detect already posted crafts - Decabits
+
+## Credits
+HUGE thanks to Decabits!
+
