@@ -5,6 +5,7 @@ import src.utils.embeds.embed_builder as embed
 
 TOKEN = ""
 CHANNEL_ID =  
+SLEEPTIME = 
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -151,7 +152,7 @@ async def poll_data():
         except Exception as e:
             print("Fatal Error:", e)
 
-        await asyncio.sleep(10)
+        await asyncio.sleep(SLEEPTIME)
 
 '''
 Function - on_ready
