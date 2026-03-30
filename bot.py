@@ -3,9 +3,10 @@ import requests
 import asyncio
 import src.utils.embeds.embed_builder as embed
 
-TOKEN = ""
-CHANNEL_ID =  
-SLEEPTIME = 
+TOKEN = 
+CHANNEL_ID = 
+
+SLEEPTIME = 30
 EFFORT_REQ = 50000
 
 intents = discord.Intents.default()
@@ -17,7 +18,7 @@ skill = ["0 TELL ME", "ANY", "Forestry", "Carpentry", "Masonry", "Mining", "Smit
 tool = ["0 TELL ME", "Axe", "Saw", "Chisel", "Pickaxe", "Hammer", "Knife", "Bow", "Scissors", "Hoe", "Rod","Pot", "Machete", "Quill", "Shovel?"]
 tool_icons = ["None", ":axe:", ":carpentry_saw:", "Chisel", ":pick:", ":hammer:", ":knife:", ":archery:", ":scissors:", "Hoe", ":fishing_pole_and_fish:", ":cooking:", "Machete", ":feather:", "Shovel?"]
 
-ping_role = ["", "", "@Forestry", "@Carpentry", "@Masonry", "@Mining", "@Smithing", "@Scholar", "@Leatherworking", "@Hunting", "@Tailoring", "@Farming", "@Fishing", "@Cooking", "@Foraging", "@Construction", "", "", "", "", "", "@Sailing"]
+ping_role = ["", "", "<@&1464743725208174704>", "<@&1464743105755353357>", "<@&1464743842870857728>", "<@&1464744033350848644>", "<@&1464744101013356564>", "<@&1464744082684514507>", "<@&1464743781634015517>", "<@&1464743760528150733>", "<@&1464744135167705263>", "<@&1464743374434078820>", "<@&1464743657822228500>", "", "<@&1464743698565697761>", "", "", "", "", "", "", ""]
 
 # ClaimID Myralune = 648518346354446795
 url = "https://bitjita.com/api/crafts?claimEntityId=648518346354446795"
@@ -72,12 +73,12 @@ Inputs   - [Embed] embed          : The embed object to send to the Discord thre
 Outputs  - N/A
 Purpose  - Send the craft alert to Discord
 '''
-async def send_thread_message(embed: discord.Embed, skill: str, entity_id: str, channel: discord.channel.ForumChannel):
+async def send_thread_message(content: str, embed: discord.Embed, skill: str, entity_id: str, channel: discord.channel.ForumChannel):
     if (await test_for_duplicate_message(entity_id=entity_id, channel=channel)):
         return
     for thread in channel.threads:
         if thread.name == skill:
-            await thread.send(embed=embed)
+            await thread.send(content=content, embed=embed, allowed_mentions=discord.AllowedMentions.all())
             seen_ids.add(entity_id)
 
 '''
@@ -126,7 +127,6 @@ async def poll_data():
                                 if craft["toolRequirements"]:
                                     tool_icon = tool_icons[int(craft["toolRequirements"][0]["tool_type"])]
                                     craft_embed = embed.new_craft_embed(
-                                        Role=discord_role,
                                         Building=building_name,
                                         Skill=skill_name,
                                         Level=level_value,
@@ -136,7 +136,6 @@ async def poll_data():
                                     )
                                 else:
                                     craft_embed = embed.new_craft_embed(
-                                        Role=discord_role,
                                         Building=building_name,
                                         Skill=skill_name,
                                         Level=level_value,
@@ -147,7 +146,7 @@ async def poll_data():
                                 entity_id = craft["entityId"]
                                 craft_embed.set_footer(text=entity_id)
 
-                                await send_thread_message(embed=craft_embed, skill=skill_name, entity_id=entity_id, channel=channel)
+                                await send_thread_message(content=discord_role, embed=craft_embed, skill=skill_name, entity_id=entity_id, channel=channel)
 
                             except Exception as e:
                                 print("Error parsing:", e)
