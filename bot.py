@@ -7,7 +7,8 @@ TOKEN =
 CHANNEL_ID = 
 
 SLEEPTIME = 30
-EFFORT_REQ = 50000
+DEFAULT_EFFORT_REQ = 50000
+MINIMUM_EFFORT_REQ = 10000
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -19,6 +20,21 @@ tool = ["0 TELL ME", "Axe", "Saw", "Chisel", "Pickaxe", "Hammer", "Knife", "Bow"
 tool_icons = ["None", ":axe:", ":carpentry_saw:", "Chisel", ":pick:", ":hammer:", ":knife:", ":archery:", ":scissors:", "Hoe", ":fishing_pole_and_fish:", ":cooking:", "Machete", ":feather:", "Shovel?"]
 
 ping_role = ["", "", "<@&1464743725208174704>", "<@&1464743105755353357>", "<@&1464743842870857728>", "<@&1464744033350848644>", "<@&1464744101013356564>", "<@&1464744082684514507>", "<@&1464743781634015517>", "<@&1464743760528150733>", "<@&1464744135167705263>", "<@&1464743374434078820>", "<@&1464743657822228500>", "", "<@&1464743698565697761>", "", "", "", "", "", "", ""]
+effort_thresholds_by_profession = {
+    "Carpentry"      : DEFAULT_EFFORT_REQ,
+    "Cooking"        : 20000,
+    "Farming"        : DEFAULT_EFFORT_REQ,
+    "Fishing"        : 35000,
+    "Foraging"       : 30000,
+    "Forestry"       : 30000,
+    "Hunting"        : 15000,
+    "Leatherworking" : 45000,
+    "Masonry"        : 30000,
+    "Mining"         : DEFAULT_EFFORT_REQ,
+    "Scholar"        : 20000,
+    "Smithing"       : DEFAULT_EFFORT_REQ,
+    "Tailoring"      : DEFAULT_EFFORT_REQ
+}
 
 # ClaimID Myralune = 648518346354446795
 url = "https://bitjita.com/api/crafts?claimEntityId=648518346354446795"
@@ -49,7 +65,7 @@ def remove_old_ids(data: dict):
         seen_ids.remove(id)
 
 '''
-Function - check_for_duplicate_message
+Function - test_for_duplicate_message
 Inputs   - [str] entity_id        : The ID of a craft at a BitCraft station
            [ForumChannel] channel : Channel object for the forum to check for duplicate entityId
 Outputs  - [bool]                 : A boolean indicating whether or not the entityId has been messaged previously
@@ -83,8 +99,7 @@ async def send_thread_message(content: str, embed: discord.Embed, skill: str, en
 
 '''
 Function - prune_old_crafts
-Inputs   - [dict]         data    : JSON response from the BitJita endpoint
-           [ForumChannel] channel : Channel object for the forum to delete messages from
+Inputs   - [ForumChannel] channel : Channel object for the forum to delete messages from
 Outputs  - N/A
 Purpose  - Delete messages for completed crafts from the provided Discord channel
 '''
@@ -106,6 +121,7 @@ async def poll_data():
     await bot.wait_until_ready()
     channel = bot.get_channel(CHANNEL_ID)
 
+    ping_allowed = False
     while not bot.is_closed():
         try:
             response = requests.get(url)
@@ -116,37 +132,46 @@ async def poll_data():
                 await prune_old_crafts(channel=channel)
                 for craft in data["craftResults"]:
                     if craft["entityId"] not in seen_ids:
-                        if int(craft["totalActionsRequired"]) >= EFFORT_REQ:
+                        skill_name = skill[int(craft["levelRequirements"][0]["skill_id"])]
+                        if int(craft["totalActionsRequired"]) >= MINIMUM_EFFORT_REQ:
                             try:
-                                discord_role = ping_role[int(craft["levelRequirements"][0]["skill_id"])]
                                 building_name = craft["buildingName"]
-                                skill_name = skill[int(craft["levelRequirements"][0]["skill_id"])]
                                 level_value = craft["levelRequirements"][0]["level"]
                                 effort_value = craft["totalActionsRequired"]
                                 owner_name = craft["ownerUsername"]
+                                embed_description = {
+                                    "Building" : building_name,
+                                    "Skill"    : skill_name,
+                                    "Level"    : level_value,
+                                    "Effort"   : effort_value
+                                }
+
                                 if craft["toolRequirements"]:
                                     tool_icon = tool_icons[int(craft["toolRequirements"][0]["tool_type"])]
-                                    craft_embed = embed.new_craft_embed(
-                                        Building=building_name,
-                                        Skill=skill_name,
-                                        Level=level_value,
-                                        Effort=effort_value,
-                                        Tool=tool_icon,
-                                        Owner=owner_name
-                                    )
-                                else:
-                                    craft_embed = embed.new_craft_embed(
-                                        Building=building_name,
-                                        Skill=skill_name,
-                                        Level=level_value,
-                                        Effort=effort_value,
-                                        Owner=owner_name
-                                    )
+                                    embed_description["Tool"] = tool_icon
 
+                                embed_description["Owner"] = owner_name
                                 entity_id = craft["entityId"]
-                                craft_embed.set_footer(text=entity_id)
 
-                                await send_thread_message(content=discord_role, embed=craft_embed, skill=skill_name, entity_id=entity_id, channel=channel)
+                                message_content = ""
+                                is_large_craft=False
+                                if int(craft["totalActionsRequired"]) >= effort_thresholds_by_profession[skill_name]:
+                                    if (ping_allowed):
+                                        message_content = ping_role[int(craft["levelRequirements"][0]["skill_id"])]
+                                    is_large_craft = True
+
+                                craft_embed = embed.new_craft_embed(
+                                    is_large_craft=is_large_craft,
+                                    embed_description=embed_description,
+                                    footer=entity_id
+                                )
+                                await send_thread_message(
+                                    content=message_content,
+                                    embed=craft_embed,
+                                    skill=skill_name,
+                                    entity_id=entity_id,
+                                    channel=channel
+                                )
 
                             except Exception as e:
                                 print("Error parsing:", e)
@@ -157,6 +182,7 @@ async def poll_data():
         except Exception as e:
             print("Fatal Error:", e)
 
+        ping_allowed = True
         await asyncio.sleep(SLEEPTIME)
 
 '''
