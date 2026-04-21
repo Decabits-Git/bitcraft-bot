@@ -42,7 +42,7 @@ effort_thresholds_by_profession = {
     "Masonry"        : 30000,
     "Mining"         : DEFAULT_EFFORT_REQ,
     "Scholar"        : 20000,
-    "Smithing"       : DEFAULT_EFFORT_REQ,
+    "Smithing"       : 100000,
     "Tailoring"      : DEFAULT_EFFORT_REQ
 }
 
